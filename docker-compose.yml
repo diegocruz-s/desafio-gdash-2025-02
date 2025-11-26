@@ -1,0 +1,7 @@
+# RabbitMQ
+# Mongo
+# Api
+
+# subir tudo => docker-compose up --build
+# derrubar tudo => docker-compose down
+
