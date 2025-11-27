@@ -5,3 +5,48 @@
 # subir tudo => docker-compose up --build
 # derrubar tudo => docker-compose down
 
+version: '3'
+
+networks:
+  base_network:
+    driver: bridge
+
+services:
+  # api_container:
+  mongo:
+    image: bitnami/mongodb:latest
+    container_name: mongo
+    restart: always
+    env_file:
+      - ./.env
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - base_network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+
+  api:
+    image: node:20-alpine
+    command: ["node", "-e", "console.log('API ON')"]
+    env_file:
+      - ./.env
+
+volumes:
+  mongo_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
