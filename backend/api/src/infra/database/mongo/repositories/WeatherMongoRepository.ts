@@ -8,6 +8,7 @@ import {
   WeatherSnapshotDocument,
   WeatherSnapshotMongo,
 } from '../schemas/weatherSnapshot.schema';
+import { Readable } from 'stream';
 
 @Injectable()
 export class WeatherMongoRepository implements IWeatherSnapshotRepository {
@@ -21,8 +22,14 @@ export class WeatherMongoRepository implements IWeatherSnapshotRepository {
     await this.weatherSnapshotModel.create(persistance);
   }
 
-  async findAll(): Promise<WeatherSnapshot[]> {
-    const weatherSnapshots = await this.weatherSnapshotModel.find().exec();
+  async findAll(params: { page: number }): Promise<WeatherSnapshot[]> {
+    const limit = 20;
+    const skipAmount = (params.page - 1) * limit;
+    const weatherSnapshots = await this.weatherSnapshotModel
+      .find({})
+      .skip(skipAmount)
+      .limit(limit)
+      .exec();
 
     return weatherSnapshots.map((wtSp) => WeatherSnapshotMapper.toDomain(wtSp));
   }
@@ -44,5 +51,9 @@ export class WeatherMongoRepository implements IWeatherSnapshotRepository {
     if (!weatherSnapshot) return null;
 
     return WeatherSnapshotMapper.toDomain(weatherSnapshot);
+  }
+
+  streamAll(): Readable {
+    return Readable.from(this.weatherSnapshotModel.find().cursor());
   }
 }

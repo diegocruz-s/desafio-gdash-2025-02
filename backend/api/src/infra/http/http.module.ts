@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TestController } from './controllers/testController.controller';
+import { WeatherSnapshotService } from 'src/domain/weather/service/weatherSnapshotservice';
+import { DatabaseModule } from '../database/database.module';
+import { WeatherSnapshotController } from './controllers/weatherSnapshot.controller';
 
 @Module({
-  imports: [],
-  controllers: [TestController],
+  imports: [DatabaseModule],
+  controllers: [WeatherSnapshotController],
+  providers: [WeatherSnapshotService],
 })
 export class HttpModule {}

@@ -5,6 +5,7 @@ import {
   WeatherSnapshotMongo,
   WeatherSnapshotSchema,
 } from './mongo/schemas/weatherSnapshot.schema';
+import { IWeatherSnapshotRepository } from 'src/domain/weather/repositories/WeatherSnapshot';
 
 @Module({
   imports: [
@@ -15,7 +16,12 @@ import {
       },
     ]),
   ],
-  providers: [WeatherMongoRepository],
-  exports: [WeatherMongoRepository],
+  providers: [
+    {
+      provide: IWeatherSnapshotRepository,
+      useClass: WeatherMongoRepository,
+    },
+  ],
+  exports: [IWeatherSnapshotRepository],
 })
 export class DatabaseModule {}
