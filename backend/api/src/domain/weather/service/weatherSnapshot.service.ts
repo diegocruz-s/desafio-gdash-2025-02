@@ -1,7 +1,9 @@
-import { Transform, TransformCallback } from 'stream';
+import { Injectable } from '@nestjs/common';
+import { Readable, Transform, TransformCallback } from 'stream';
+import { IServiceResponse } from '../../interfaces/protocols';
+import { IConvertDataToXlsx } from '../convertToXlsx/ConvertDataToXlsx';
 import { WeatherSnapshot } from '../entity/weatherSnapshot';
 import { IWeatherSnapshotRepository } from '../repositories/WeatherSnapshot';
-import { Injectable } from '@nestjs/common';
 
 interface CreateWeatherSnapshotInput {
   temperature: number;
@@ -12,20 +14,16 @@ interface CreateWeatherSnapshotInput {
   source?: string;
 }
 
-export interface IWeatherSnapshotServiceResponse<T> {
-  result?: T;
-  errors?: string[];
-}
-
 @Injectable()
 export class WeatherSnapshotService {
   constructor(
     private readonly weatherSnapshotRepository: IWeatherSnapshotRepository,
+    private readonly convertDataToXlsx: IConvertDataToXlsx,
   ) {}
 
   async create(
     input: CreateWeatherSnapshotInput,
-  ): Promise<IWeatherSnapshotServiceResponse<WeatherSnapshot>> {
+  ): Promise<IServiceResponse<WeatherSnapshot>> {
     const weatherSnapshot = WeatherSnapshot.create(input);
 
     await this.weatherSnapshotRepository.create(weatherSnapshot);
@@ -37,7 +35,7 @@ export class WeatherSnapshotService {
 
   async getAllSnapshots(params: {
     page: number;
-  }): Promise<IWeatherSnapshotServiceResponse<WeatherSnapshot[]>> {
+  }): Promise<IServiceResponse<WeatherSnapshot[]>> {
     const weatherSnapshots = await this.weatherSnapshotRepository.findAll({
       page: params.page,
     });
@@ -47,10 +45,14 @@ export class WeatherSnapshotService {
     };
   }
 
-  async getLatestSnapshot(): Promise<
-    IWeatherSnapshotServiceResponse<WeatherSnapshot | null>
-  > {
+  async getLatestSnapshot(): Promise<IServiceResponse<WeatherSnapshot>> {
     const weatherSnapshot = await this.weatherSnapshotRepository.findLatest();
+
+    if (!weatherSnapshot) {
+      return {
+        errors: ['Weather snapshot not found!'],
+      };
+    }
 
     return {
       result: weatherSnapshot,
@@ -68,7 +70,6 @@ export class WeatherSnapshotService {
         _: BufferEncoding,
         cb: TransformCallback,
       ) {
-        console.log('chunk: ', chunk);
         const line = [
           chunk.id,
           chunk.temperature,
@@ -101,5 +102,11 @@ export class WeatherSnapshotService {
     });
 
     return dbStream.pipe(csvTransform);
+  }
+
+  exportAsXlsxStream(): Readable {
+    const dbStream = this.weatherSnapshotRepository.streamAll();
+    const streamXlsx = this.convertDataToXlsx.convert(dbStream);
+    return streamXlsx;
   }
 }

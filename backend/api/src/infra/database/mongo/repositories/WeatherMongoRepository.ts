@@ -3,12 +3,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { WeatherSnapshot } from 'src/domain/weather/entity/weatherSnapshot';
 import { IWeatherSnapshotRepository } from 'src/domain/weather/repositories/WeatherSnapshot';
+import { Readable, Transform } from 'stream';
 import { WeatherSnapshotMapper } from '../mappers/WeatherSnapshotMapper';
 import {
   WeatherSnapshotDocument,
   WeatherSnapshotMongo,
 } from '../schemas/weatherSnapshot.schema';
-import { Readable } from 'stream';
 
 @Injectable()
 export class WeatherMongoRepository implements IWeatherSnapshotRepository {
@@ -54,6 +54,21 @@ export class WeatherMongoRepository implements IWeatherSnapshotRepository {
   }
 
   streamAll(): Readable {
-    return Readable.from(this.weatherSnapshotModel.find().cursor());
+    const mongoStream = this.weatherSnapshotModel.find().cursor();
+    const mapperTransform = new Transform({
+      objectMode: true,
+      transform(doc: WeatherSnapshotDocument, _, cb) {
+        try {
+          const weatherSnapshot = WeatherSnapshotMapper.toDomain(doc);
+          cb(null, weatherSnapshot);
+        } catch (error) {
+          if (error instanceof Error) {
+            cb(error);
+          }
+        }
+      },
+    });
+
+    return mongoStream.pipe(mapperTransform);
   }
 }

@@ -6,6 +6,9 @@ import {
   WeatherSnapshotSchema,
 } from './mongo/schemas/weatherSnapshot.schema';
 import { IWeatherSnapshotRepository } from 'src/domain/weather/repositories/WeatherSnapshot';
+import { IUserRepository } from 'src/domain/user/repository/UsersRepository';
+import { UserRepository } from './mongo/repositories/UserRepository';
+import { UserMongo, UserSchema } from './mongo/schemas/user.schema';
 
 @Module({
   imports: [
@@ -15,13 +18,23 @@ import { IWeatherSnapshotRepository } from 'src/domain/weather/repositories/Weat
         schema: WeatherSnapshotSchema,
       },
     ]),
+    MongooseModule.forFeature([
+      {
+        name: UserMongo.name,
+        schema: UserSchema,
+      },
+    ]),
   ],
   providers: [
     {
       provide: IWeatherSnapshotRepository,
       useClass: WeatherMongoRepository,
     },
+    {
+      provide: IUserRepository,
+      useClass: UserRepository,
+    },
   ],
-  exports: [IWeatherSnapshotRepository],
+  exports: [IWeatherSnapshotRepository, IUserRepository],
 })
 export class DatabaseModule {}

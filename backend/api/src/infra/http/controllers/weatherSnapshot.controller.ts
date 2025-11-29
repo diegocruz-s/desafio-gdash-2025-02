@@ -6,11 +6,13 @@ import {
   Post,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { WeatherSnapshotService } from 'src/domain/weather/service/weatherSnapshotservice';
+import { WeatherSnapshotService } from 'src/domain/weather/service/weatherSnapshot.service';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../pipes/zodValidationPipe';
+import { JwtAuthGuard } from 'src/infra/auth/auth.guard';
 
 const createWeatherSnapshotBodySchema = z.object({
   temperature: z.coerce.number(),
@@ -66,6 +68,7 @@ export class WeatherSnapshotController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('/logs')
   async fetchWeatherSnapshots(
     @Query('page', queryValidationPipe) page: PageQueryParamSchema,
@@ -88,6 +91,19 @@ export class WeatherSnapshotController {
       'Content-Type': 'text/csv',
       'Content-Disposition': 'attachment; filename="weather.csv"',
     });
+    result.pipe(res);
+  }
+
+  @Get('/export.xlsx')
+  generateXLSXDatas(@Res() res: Response) {
+    const result = this.weatherSnapshotService.exportAsXlsxStream();
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader('Content-Disposition', 'attachment; filename="weather.xlsx"');
+
     result.pipe(res);
   }
 }
