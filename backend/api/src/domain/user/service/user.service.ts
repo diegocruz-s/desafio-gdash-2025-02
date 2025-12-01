@@ -10,6 +10,10 @@ interface CreateUserInput {
   password: string;
 }
 
+interface UpdateUserInput extends Partial<CreateUserInput> {
+  userId: string;
+}
+
 @Injectable()
 export class UserService {
   constructor(
@@ -43,32 +47,72 @@ export class UserService {
     };
   }
 
-  // async findUser(id: string): Promise<IServiceResponse<User>> {
-  //   const user = await this.usersRepository.findById(id);
-  //   if (!user) {
-  //     return {
-  //       errors: ['User not found!'],
-  //     };
-  //   }
+  async findUserById(id: string): Promise<IServiceResponse<User>> {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      return {
+        errors: ['User not found!'],
+      };
+    }
+    console.log('user', user);
 
-  //   return {
-  //     result: user,
-  //   };
-  // }
+    return {
+      result: user,
+    };
+  }
 
-  // async delete(id: string): Promise<IServiceResponse<string>> {
-  //   const user = await this.usersRepository.findById(id);
-  //   if (!user) {
-  //     return {
-  //       errors: ['User not found!'],
-  //     };
-  //   }
+  async update({
+    userId,
+    email,
+    name,
+    password,
+  }: UpdateUserInput): Promise<IServiceResponse<User>> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      return {
+        errors: ['User not found!'],
+      };
+    }
 
-  //   user.deactivate();
-  //   await this.usersRepository.delete(user);
+    if (name && name !== user.name) {
+      user.changeName(name);
+    }
 
-  //   return {
-  //     result: 'User deleted',
-  //   };
-  // }
+    if (email && email !== user.email) {
+      const emailAlreadyExists = await this.usersRepository.findByEmail(email);
+      if (emailAlreadyExists) {
+        return {
+          errors: ['Email is already exists!'],
+        };
+      }
+      user.changeEmail(email);
+    }
+
+    if (password) {
+      const newPasswordHash = await this.hashPassword.hash(password);
+      user.changePassword(newPasswordHash);
+    }
+
+    user.setUpdatedAt();
+
+    await this.usersRepository.save(user);
+
+    return {
+      result: user,
+    };
+  }
+
+  async delete(id: string): Promise<IServiceResponse<string>> {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      return {
+        errors: ['User not found!'],
+      };
+    }
+    await this.usersRepository.delete(user);
+
+    return {
+      result: 'User deleted',
+    };
+  }
 }

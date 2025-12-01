@@ -9,7 +9,7 @@ export interface IUserProps {
   passwordHash: string;
   role: OptionsAccount;
   createdAt?: Date;
-  isActive?: boolean;
+  updatedAt?: Date;
 }
 
 import { randomUUID } from 'node:crypto';
@@ -17,15 +17,13 @@ import { InvalidProperty } from 'src/domain/errors/invalidProperty';
 
 export class User {
   private _id: string;
-  private _createdAt: Date;
-  private _isActive: boolean;
   protected props: IUserProps;
 
   constructor(props: IUserProps, id?: string) {
     this.props = props;
     this._id = id ?? randomUUID();
-    this._isActive = props.isActive ?? true;
-    this._createdAt = props.createdAt || new Date();
+    this.props.createdAt = props.createdAt || new Date();
+    this.props.updatedAt = props.updatedAt || null;
 
     this.validate();
   }
@@ -35,11 +33,11 @@ export class User {
   }
 
   get createdAt() {
-    return this._createdAt;
+    return this.props.createdAt;
   }
 
-  get isActive() {
-    return this._isActive;
+  get updatedAt() {
+    return this.props.updatedAt;
   }
 
   get name() {
@@ -58,16 +56,20 @@ export class User {
     return this.props.role;
   }
 
-  activate() {
-    this.props.isActive = true;
-  }
-
-  deactivate() {
-    this.props.isActive = false;
-  }
-
   changePassword(newPasswordHash: string) {
     this.props.passwordHash = newPasswordHash;
+  }
+
+  changeEmail(email: string) {
+    this.props.email = email;
+  }
+
+  changeName(name: string) {
+    this.props.name = name;
+  }
+
+  setUpdatedAt() {
+    this.props.updatedAt = new Date();
   }
 
   private validate() {

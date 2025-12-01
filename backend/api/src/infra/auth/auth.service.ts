@@ -16,14 +16,15 @@ export class AuthService {
     password: string,
   ): Promise<{ accessToken: string }> {
     const user = await this.userRepository.findByEmail(email);
-    if (!user) throw new UnauthorizedException();
+    if (!user) throw new UnauthorizedException('Authentication Failed!');
 
     const isMatchPassword = await this.hashCompare.compare(
       password,
       user.passwordHash,
     );
 
-    if (!isMatchPassword) throw new UnauthorizedException();
+    if (!isMatchPassword)
+      throw new UnauthorizedException('Authentication Failed!');
 
     const payload = { email: user.email, sub: user.id };
     const token = this.jwtService.sign(payload);

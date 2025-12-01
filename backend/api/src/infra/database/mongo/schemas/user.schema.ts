@@ -6,10 +6,13 @@ export type UserDocument = HydratedDocument<UserMongo>;
 
 @Schema({ collection: 'users' })
 export class UserMongo {
+  @Prop({ type: String })
+  _id: string;
+
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true, index: true })
+  @Prop({ required: true, index: true, unique: true })
   email: string;
 
   @Prop({ required: true })
@@ -18,11 +21,11 @@ export class UserMongo {
   @Prop({ required: true })
   createdAt: Date;
 
-  @Prop({ required: true })
-  role: OptionsAccount;
+  @Prop({ required: false })
+  updatedAt: Date;
 
   @Prop({ required: true })
-  isActive: boolean;
+  role: OptionsAccount;
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserMongo);

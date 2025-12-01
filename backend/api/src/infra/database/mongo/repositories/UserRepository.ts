@@ -7,7 +7,6 @@ import { UserMapper } from '../mappers/UserMapper';
 import { UserDocument, UserMongo } from '../schemas/user.schema';
 
 @Injectable()
-// remember remove Partial<>
 export class UserRepository implements IUserRepository {
   constructor(
     @InjectModel(UserMongo.name)
@@ -24,5 +23,25 @@ export class UserRepository implements IUserRepository {
     if (!user) return null;
 
     return UserMapper.toDomain(user);
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const user = await this.userModel.findOne({ _id: id }).exec();
+    if (!user) return null;
+
+    return UserMapper.toDomain(user);
+  }
+
+  async save(user: User): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: user.id },
+      UserMapper.toPersistance(user),
+    );
+  }
+
+  async delete(user: User): Promise<void> {
+    await this.userModel.deleteOne({
+      _id: user.id,
+    });
   }
 }

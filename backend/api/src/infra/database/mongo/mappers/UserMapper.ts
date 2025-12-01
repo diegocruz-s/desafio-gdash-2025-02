@@ -9,20 +9,21 @@ export class UserMapper {
         name: raw.name,
         passwordHash: raw.passwordHash,
         role: raw.role,
-        isActive: raw.isActive,
         createdAt: raw.createdAt,
+        updatedAt: raw.updatedAt,
       },
-      raw._id.toString(),
+      raw._id,
     );
   }
   static toPersistance(entity: User): Partial<UserMongo> {
     return {
+      _id: entity.id,
       createdAt: entity.createdAt,
       email: entity.email,
-      isActive: entity.isActive,
       name: entity.name,
       passwordHash: entity.passwordHash,
       role: entity.role,
+      updatedAt: entity.updatedAt,
     };
   }
 }

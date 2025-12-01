@@ -6,13 +6,12 @@ import {
   Post,
   Query,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { WeatherSnapshotService } from 'src/domain/weather/service/weatherSnapshot.service';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../pipes/zodValidationPipe';
-import { JwtAuthGuard } from 'src/infra/auth/auth.guard';
+import { WeatherSnapshotPresenter } from '../presenters/weatherSnapshot.presenter';
 
 const createWeatherSnapshotBodySchema = z.object({
   temperature: z.coerce.number(),
@@ -64,11 +63,10 @@ export class WeatherSnapshotController {
     if (errors) throw new BadRequestException();
 
     return {
-      weatherSnapshot: result,
+      weatherSnapshot: WeatherSnapshotPresenter.toHTTP(result),
     };
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('/logs')
   async fetchWeatherSnapshots(
     @Query('page', queryValidationPipe) page: PageQueryParamSchema,
@@ -79,7 +77,9 @@ export class WeatherSnapshotController {
     if (errors) throw new BadRequestException();
 
     return {
-      weatherSnapshots: result,
+      weatherSnapshots: result.map((wtSp) =>
+        WeatherSnapshotPresenter.toHTTP(wtSp),
+      ),
     };
   }
 
