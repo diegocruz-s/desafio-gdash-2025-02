@@ -17,7 +17,7 @@ const createWeatherSnapshotBodySchema = z.object({
   temperature: z.coerce.number(),
   windSpeed: z.coerce.number().min(0),
   humidity: z.coerce.number().min(0).max(100),
-  collectedAt: z.iso.datetime(),
+  collectedAt: z.coerce.date(),
   city: z.optional(z.string()),
   source: z.optional(z.string()),
 });

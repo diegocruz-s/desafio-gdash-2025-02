@@ -4,8 +4,8 @@ import { InvalidProperty } from 'src/domain/errors/invalidProperty';
 export interface IWeatherSnapshotProps {
   temperature: number;
   windSpeed: number;
-  collectedAt: Date;
   humidity: number;
+  collectedAt: Date;
   createdAt?: Date;
   city?: string;
   source?: string;
