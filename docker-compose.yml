@@ -1,15 +1,13 @@
+# Collector
 # RabbitMQ
-# Mongo
+# Worker
 # Api
+# Mongo
 
 # subir tudo => docker-compose up --build
 # derrubar tudo => docker-compose down
 
 version: '3'
-
-networks:
-  base_network:
-    driver: bridge
 
 services:
   # api_container:
@@ -22,9 +20,9 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - mongo_data:/bitnami/mongodb
     networks:
-      - base_network
+      - app-network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -38,12 +36,77 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq/
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 60s
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: worker
+    env_file:
+      - ./worker/.env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      api:
+        condition: service_started
+    # environment:
+    #   RABBITMQ_HOST: rabbitmq
+    #   RABBITMQ_PORT: 5672
+    #   API_URL: http://api:3000/weather
+    networks:
+      - app-network
+
+  collector:
+    build:
+      context: ./collector
+      dockerfile: Dockerfile
+    container_name: collector
+    env_file:
+      - ./collector/.env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    # environment:
+    #   RABBITMQ_HOST: rabbitmq
+    #   RABBITMQ_PORT: 5672
+    #   CITY: Monte Santo de Minas
+    #   LAT: -21.19094
+    #   LON: -46.97188
+    #   INTERVAL_SECONDS: 10
+    networks:
+      - app-network
 
   api:
-    image: node:20-alpine
-    command: ["node", "-e", "console.log('API ON')"]
+    build:
+      context: ./backend/api
+      dockerfile: Dockerfile
+    container_name: api
+    ports:
+      - "3000:3000"
     env_file:
-      - ./.env
+      - ./backend/api/.env
+    depends_on:
+      - mongo
+      - rabbitmq
+    # environment:
+      # MONGO_URL: mongodb://mongo:27017/weather
+      # JWT_SECRET: supersecret
+      # RABBITMQ_HOST: rabbitmq
+      # RABBITMQ_PORT: 5672
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   mongo_data:

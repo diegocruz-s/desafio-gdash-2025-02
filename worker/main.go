@@ -7,16 +7,16 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"fmt"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var (
-	RabbitURL = getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
+	RabbitURL = getEnv("RABBITMQ_URL", "amqp://guest:guest@rabbitmq:5672/")
 	QueueName = getEnv("RABBITMQ_QUEUE", "weather_queue")
 
-	ApiURL = getEnv("API_URL", "http://localhost:3000/weather")
+	ApiURL = getEnv("API_URL", "http://api:3000/weather")
 )
 
 type CreateWeatherDTO struct {
@@ -41,21 +41,42 @@ type Weather struct {
 }
 
 func main() {
-	fmt.Println("Hello World em Go!")
 	readDatasFromRabbitMQ()
 }
 
 func readDatasFromRabbitMQ () {
-	conn, err := amqp.Dial(RabbitURL)
-	failOnError(err, "Falha ao conectar ao RabbitMQ")
+	var conn *amqp.Connection
+	var err error
+
+	for {
+		conn, err = amqp.Dial(RabbitURL)
+		if err == nil {
+			log.Println("✅ Conectado ao RabbitMQ com sucesso")
+			break
+		}
+
+		log.Println("⏳ RabbitMQ indisponível, tentando novamente em 5 segundos...")
+		time.Sleep(5 * time.Second)
+	}
 	defer conn.Close()
 
 	ch, err := conn.Channel()
 	failOnError(err, "Falha ao abrir um canal")
 	defer ch.Close()
 
-	msgs, err := ch.Consume(
+	queue, err := ch.QueueDeclare(
 		QueueName,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	failOnError(err, "Failed to declare a queue")
+	log.Printf("Queue '%s' declared successfully!", queue.Name)
+
+	msgs, err := ch.Consume(
+		queue.Name,
 		"",
 		false,
 		false,

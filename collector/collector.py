@@ -22,7 +22,7 @@ RABBITMQ_QUEUE = os.getenv("RABBITMQ_QUEUE", "weather_queue")
 CITY = os.getenv("CITY", "São Paulo")
 LAT = os.getenv("LAT", "-23.55052")
 LON = os.getenv("LON", "-46.633308")
-COLLECT_INTERVAL_SECONDS = int(os.getenv("INTERVAL_SECONDS", 10))
+COLLECT_INTERVAL_SECONDS = int(os.getenv("INTERVAL_SECONDS", 60))
 
 LOG = logging.getLogger("collector")
 logging.basicConfig(level=logging.INFO)
@@ -90,7 +90,7 @@ def publishRabbitMQ(message: dict):
       routing_key=RABBITMQ_QUEUE,
       body=json.dumps(message),
       properties=pika.BasicProperties(
-        delivery_mode=2 
+        delivery_mode=2
       )
     )
 
