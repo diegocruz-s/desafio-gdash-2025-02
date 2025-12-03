@@ -6,5 +6,6 @@ export abstract class IWeatherSnapshotRepository {
   abstract findLatest(): Promise<WeatherSnapshot | null>;
   abstract findAll(params: { page: number }): Promise<WeatherSnapshot[]>;
   abstract create(snapshot: WeatherSnapshot): Promise<void>;
+  abstract findByPeriod(since: Date): Promise<WeatherSnapshot[]>;
   abstract streamAll(): Readable;
 }

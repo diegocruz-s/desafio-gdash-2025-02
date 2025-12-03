@@ -53,6 +53,16 @@ export class WeatherMongoRepository implements IWeatherSnapshotRepository {
     return WeatherSnapshotMapper.toDomain(weatherSnapshot);
   }
 
+  async findByPeriod(since: Date): Promise<WeatherSnapshot[]> {
+    const weatherSnapshots = await this.weatherSnapshotModel
+      .find({
+        collectedAt: { $gte: since },
+      })
+      .sort({ collectedAt: 1 });
+
+    return weatherSnapshots.map((wtSp) => WeatherSnapshotMapper.toDomain(wtSp));
+  }
+
   streamAll(): Readable {
     const mongoStream = this.weatherSnapshotModel.find().cursor();
     const mapperTransform = new Transform({
