@@ -83,6 +83,18 @@ export class WeatherSnapshotController {
     };
   }
 
+  @Get('/latest')
+  async getLatestSnapshot() {
+    const { errors, result } =
+      await this.weatherSnapshotService.getLatestSnapshot();
+
+    if (errors) throw new BadRequestException();
+
+    return {
+      weatherSnapshot: WeatherSnapshotPresenter.toHTTP(result),
+    };
+  }
+
   @Get('/export.csv')
   generateCSVDatas(@Res() res: Response) {
     const result = this.weatherSnapshotService.exportAsCSVStream();

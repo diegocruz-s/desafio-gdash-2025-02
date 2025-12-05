@@ -1,12 +1,14 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
+import { Cache } from 'cache-manager';
 import { IServiceResponse } from 'src/domain/interfaces/protocols';
 import { WeatherInsights } from '../entity/insights';
 import { IWeatherSnapshotRepository } from '../repositories/WeatherSnapshot';
-import { Cache } from 'cache-manager';
 
 @Injectable()
 export class WeatherSnapshotInsightsService {
+  private minDatas = 3;
+
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly weatherSnapshotRepository: IWeatherSnapshotRepository,
@@ -30,7 +32,7 @@ export class WeatherSnapshotInsightsService {
 
     const data = await this.weatherSnapshotRepository.findByPeriod(since);
 
-    if (data.length <= 2) {
+    if (data.length < this.minDatas) {
       return {
         errors: ['Insufficient data to generate insights.'],
       };
@@ -92,7 +94,9 @@ export class WeatherSnapshotInsightsService {
   }
 
   average(values: number[]) {
-    return values.reduce((a, b) => a + b, 0) / values.length;
+    return parseFloat(
+      (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2),
+    );
   }
 
   calculateTrend(values: number[]): 'up' | 'down' | 'stable' {

@@ -26,7 +26,7 @@ export class WeatherSnapshotInsightsController {
     private weatherSnapshotInsightsService: WeatherSnapshotInsightsService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Get('/insights')
   async generateWeatherSnapshotsInsights(
     @Query('period', periodValidationPipe) period: PeriodQueryParamSchema,
@@ -36,7 +36,7 @@ export class WeatherSnapshotInsightsController {
         periodInHours: period,
       });
 
-    if (errors) throw new BadRequestException();
+    if (errors) throw new BadRequestException(errors);
 
     return {
       weatherSnapshotsInsights: result,

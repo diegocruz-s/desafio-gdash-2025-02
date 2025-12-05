@@ -1,5 +1,6 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { IServiceResponse } from 'src/domain/interfaces/protocols';
 import { HashComparer } from 'src/domain/user/cryptograph/hash-comparer';
 import { IUserRepository } from 'src/domain/user/repository/UsersRepository';
 
@@ -14,23 +15,32 @@ export class AuthService {
   async signIn(
     email: string,
     password: string,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<IServiceResponse<{ accessToken: string }>> {
     const user = await this.userRepository.findByEmail(email);
-    if (!user) throw new UnauthorizedException('Authentication Failed!');
+    if (!user) {
+      return {
+        errors: ['Authentication Failed!'],
+      };
+    }
 
     const isMatchPassword = await this.hashCompare.compare(
       password,
       user.passwordHash,
     );
 
-    if (!isMatchPassword)
-      throw new UnauthorizedException('Authentication Failed!');
+    if (!isMatchPassword) {
+      return {
+        errors: ['Authentication Failed!'],
+      };
+    }
 
     const payload = { email: user.email, sub: user.id };
     const token = this.jwtService.sign(payload);
 
     return {
-      accessToken: token,
+      result: {
+        accessToken: token,
+      },
     };
   }
 }
