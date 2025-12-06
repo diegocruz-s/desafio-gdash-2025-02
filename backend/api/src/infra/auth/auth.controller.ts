@@ -26,6 +26,7 @@ export class AuthController {
 
     return {
       accessToken: result.accessToken,
+      id: result.id,
     };
   }
 }

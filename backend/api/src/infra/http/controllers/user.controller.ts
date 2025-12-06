@@ -57,8 +57,14 @@ export class UserController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findUser(@Param('id') id: string) {
+  async findUser(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: UserPayload,
+  ) {
+    if (currentUser.sub !== id)
+      throw new UnauthorizedException('You only view a your user!');
     const { errors, result } = await this.userService.findUserById(id);
 
     if (errors) {
@@ -83,9 +89,10 @@ export class UserController {
     const { errors, result } = await this.userService.delete(id);
     if (errors) {
       if (errors[0].includes('not found')) throw new NotFoundException(errors);
-      throw new BadRequestException();
+      throw new BadRequestException(errors);
     }
 
+    console.log('result: ', result);
     return {
       message: result,
     };
@@ -110,7 +117,7 @@ export class UserController {
 
     if (errors) {
       if (errors[0].includes('not found')) throw new NotFoundException(errors);
-      throw new BadRequestException();
+      throw new BadRequestException(errors);
     }
 
     return {

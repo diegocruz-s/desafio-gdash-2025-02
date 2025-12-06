@@ -15,7 +15,7 @@ export class AuthService {
   async signIn(
     email: string,
     password: string,
-  ): Promise<IServiceResponse<{ accessToken: string }>> {
+  ): Promise<IServiceResponse<{ accessToken: string; id: string }>> {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       return {
@@ -40,6 +40,7 @@ export class AuthService {
     return {
       result: {
         accessToken: token,
+        id: user.id,
       },
     };
   }

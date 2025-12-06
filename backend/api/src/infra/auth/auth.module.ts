@@ -17,7 +17,7 @@ import { BcrpytHasher } from '../cryptography/bcryptHasher';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow('JWT_SECRET'),
-        signOptions: { expiresIn: '60s' },
+        signOptions: { expiresIn: '40m' },
       }),
     }),
   ],
