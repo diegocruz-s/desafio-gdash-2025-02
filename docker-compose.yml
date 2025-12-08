@@ -15,8 +15,6 @@ services:
     image: bitnami/mongodb:latest
     container_name: mongo
     restart: always
-    env_file:
-      - ./.env
     ports:
       - "27017:27017"
     volumes:
@@ -81,7 +79,6 @@ services:
       - ./backend/api/.env
     depends_on:
       - mongo
-      - rabbitmq
     networks:
       - app-network
 
