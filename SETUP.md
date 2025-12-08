@@ -77,7 +77,7 @@ Na raiz do projeto:
 
 ```bash
 # Subir todos os serviços
-docker compose up --build
+docker compose up -d --build
 
 # Parar todos os serviços
 docker compose down -v
@@ -168,5 +168,5 @@ go run main.go
 
 ## 🎥 Vídeo explicativo
 
-Link do vídeo no YouTube (não listado)
+[https://youtu.be/rmZcY6TUJz4](https://youtu.be/rmZcY6TUJz4)
 
