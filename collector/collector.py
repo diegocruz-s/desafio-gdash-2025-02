@@ -7,6 +7,7 @@ import uuid
 import pika
 from datetime import datetime, timezone
 from dotenv import load_dotenv
+import pytz
 
 load_dotenv()
 
@@ -41,23 +42,31 @@ def fetchOpenMeteo(lat, lon):
     r.raise_for_status()
     return r.json()
 
+def convertData(timeStr: str):
+  dtUtc = datetime.fromisoformat(timeStr)
+  dtUtc = dtUtc.replace(tzinfo=timezone.utc)
+
+  saoPauloTz = pytz.timezone("America/Sao_Paulo")
+
+  return dtUtc.astimezone(saoPauloTz).isoformat()
+
 def buildMessage(data):
   now = datetime.now(timezone.utc).isoformat()
-  print('now: ', now)
+
   temperature = data["current_weather"]["temperature"]
-  wind_speed = data["current_weather"]["windspeed"]
-  collected_at = data["current_weather"]["time"]
+  windSpeed = data["current_weather"]["windspeed"]
+  collectedAtRaw = data["current_weather"]["time"]
+  collectedAt = convertData(collectedAtRaw)
   humidity = data["hourly"]["relativehumidity_2m"][0]
   message = {
     "id": str(uuid.uuid4()),
-    "collectedAt": now,
     "location": {"city": CITY, "lat": float(LAT), "lon": float(LON)},
     "source": "open-meteo",
     "payload": {
       "temperature": temperature,
-      "windSpeed": wind_speed,
+      "windSpeed": windSpeed,
       "humidity": humidity,
-      "collectedAt": collected_at,
+      "collectedAt": collectedAt,
       "city": CITY,
       "source": "open-meteo"
     },
@@ -66,40 +75,41 @@ def buildMessage(data):
   return message
 
 def publishRabbitMQ(message: dict):
-  try:
-    credentials = pika.PlainCredentials(
-      RABBITMQ_USER,
-      RABBITMQ_PASS
-    )
+  credentials = pika.PlainCredentials(
+    RABBITMQ_USER,
+    RABBITMQ_PASS
+  )
 
-    params = pika.ConnectionParameters(
-      host=RABBITMQ_HOST,
-      port=RABBITMQ_PORT,
-      credentials=credentials,
-      heartbeat=30,
-      blocked_connection_timeout=10
-    )
+  params = pika.ConnectionParameters(
+    host=RABBITMQ_HOST,
+    port=RABBITMQ_PORT,
+    credentials=credentials,
+    heartbeat=30,
+    blocked_connection_timeout=10
+  )
+  while True:
+    try:
+      connection = pika.BlockingConnection(params)
+      channel = connection.channel()
 
-    connection = pika.BlockingConnection(params)
-    channel = connection.channel()
+      channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
 
-    channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
-
-    channel.basic_publish(
-      exchange="",
-      routing_key=RABBITMQ_QUEUE,
-      body=json.dumps(message),
-      properties=pika.BasicProperties(
-        delivery_mode=2
+      channel.basic_publish(
+        exchange="",
+        routing_key=RABBITMQ_QUEUE,
+        body=json.dumps(message),
+        properties=pika.BasicProperties(
+          delivery_mode=2
+        )
       )
-    )
 
-    connection.close()
-    LOG.info("✅ Mensagem enviada para RabbitMQ com sucesso")
+      connection.close()
+      LOG.info("✅ Mensagem enviada para RabbitMQ com sucesso")
+      break
 
-  except Exception as e:
-    LOG.error(f"❌ Erro ao publicar no RabbitMQ: {e}")
-    raise e
+    except Exception as e:
+      LOG.warning(f"⏳ RabbitMQ indisponível: {e}. Tentando novamente em 5 segundos...")
+      time.sleep(5)
 
 def runOnce():
   try:

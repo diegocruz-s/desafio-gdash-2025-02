@@ -30,9 +30,9 @@ type CreateWeatherDTO struct {
 
 type Weather struct {
 	ID          string `json:"id"`
-	CollectedAt string `json:"collectedAt"`
 	Payload     struct {
 		Temperature float64 `json:"temperature"`
+		CollectedAt string `json:"collectedAt"`
 		WindSpeed   float64 `json:"windSpeed"`
 		Humidity    int     `json:"humidity"`
 		City        string  `json:"city"`
@@ -142,7 +142,7 @@ func WeatherToCreateDTO (weather Weather) CreateWeatherDTO {
 		Temperature: weather.Payload.Temperature,
 		WindSpeed: weather.Payload.WindSpeed,
 		Humidity: weather.Payload.Humidity,
-		CollectedAt: weather.CollectedAt,
+		CollectedAt: weather.Payload.CollectedAt,
 		City: weather.Payload.City,
 		Source: weather.Payload.Source,
 	}

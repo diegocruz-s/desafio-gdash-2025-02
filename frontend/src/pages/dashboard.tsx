@@ -1,34 +1,66 @@
-import React, { useEffect, useState } from "react";
+import { WeatherChart } from "@/components/weather/WeatherChart";
+import {
+  getLatestWeather,
+  getWeatherSnapshots,
+} from "@/store/slices/weatherSlice";
+import { useAppSelector, type AppDispatch } from "@/store/store";
+import type { WeatherSnapshot } from "@/types/WeatherSnapshot";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import WeatherCard from "../components/weather/Card";
-import WeatherChart from "../components/weather/WeatherChart";
+import { Loading } from "@/components/loading/loading";
 
-type WeatherData = {
+interface IChartData {
+  time: string;
   temperature: number;
-  humidity: number;
   windSpeed: number;
-  condition: string;
-};
+  humidity: number;
+}
 
-const Dashboard: React.FC = () => {
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+export function Dashboard() {
+  const dispatch = useDispatch<AppDispatch>();
+  const {
+    loading,
+    weatherSnapshot,
+    weatherSnapshots,
+  } = useAppSelector((s) => s.weather);
+  const [weatherData, setWeatherData] = useState<WeatherSnapshot | null>(null);
+  const [chartData, setChartData] = useState<IChartData[]>([]);
 
   useEffect(() => {
-    const fetchedWeatherData: WeatherData = {
-      temperature: 25,
-      humidity: 60,
-      windSpeed: 15,
-      condition: "Ensolarado",
-    };
+    dispatch(getLatestWeather());
+    dispatch(getWeatherSnapshots({}));
+  }, [dispatch]);
 
-    setWeatherData(fetchedWeatherData);
-  }, []);
+  useEffect(() => {
+    setWeatherData(weatherSnapshot);
+  }, [weatherSnapshot]);
 
-  const chartData = [
-    { time: "12:00", temperature: 24 },
-    { time: "13:00", temperature: 25 },
-    { time: "14:00", temperature: 26 },
-    { time: "15:00", temperature: 25 },
-  ];
+  useEffect(() => {
+    const charts: IChartData[] = [];
+    weatherSnapshots?.map((wS) => {
+      const dateObject = new Date(wS.collectedAt);
+      const hours = String(dateObject.getUTCHours()).padStart(2, "0");
+      const minutes = String(dateObject.getUTCMinutes()).padStart(2, "0");
+      const formattedTime = `${hours}:${minutes}`;
+
+      charts.push({
+        temperature: wS.temperature,
+        windSpeed: wS.windSpeed,
+        humidity: wS.humidity,
+        time: formattedTime,
+      });
+    });
+
+    setChartData(charts);
+  }, [weatherSnapshots]);
+
+  // const chartData = [
+  //   { time: "12:00", temperature: 24 },
+  //   { time: "13:00", temperature: 25 },
+  //   { time: "14:00", temperature: 26 },
+  //   { time: "15:00", temperature: 25 },
+  // ];
 
   return (
     <div className="p-8">
@@ -54,16 +86,35 @@ const Dashboard: React.FC = () => {
             />
             <WeatherCard
               title="Condição Climática"
-              value={weatherData.condition}
+              value={weatherData.conditional || ""}
               unit=""
             />
           </>
         )}
       </div>
 
-      <WeatherChart data={chartData} />
+      { loading && <Loading />}
+
+      {chartData?.length > 0 && (
+        <>
+          <WeatherChart
+            data={chartData}
+            dataKey="temperature"
+            title="Temperatura ao longo do tempo"
+          />
+          <WeatherChart
+            data={chartData}
+            dataKey="humidity"
+            title="Humidade ao longo do tempo"
+          />
+          <WeatherChart
+            data={chartData}
+            dataKey="windSpeed"
+            title="Vento ao longo do tempo"
+          />
+        </>
+      )}
     </div>
   );
 };
 
-export default Dashboard;

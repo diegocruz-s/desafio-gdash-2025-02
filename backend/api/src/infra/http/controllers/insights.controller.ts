@@ -26,7 +26,7 @@ export class WeatherSnapshotInsightsController {
     private weatherSnapshotInsightsService: WeatherSnapshotInsightsService,
   ) {}
 
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('/insights')
   async generateWeatherSnapshotsInsights(
     @Query('period', periodValidationPipe) period: PeriodQueryParamSchema,

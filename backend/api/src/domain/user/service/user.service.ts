@@ -54,7 +54,6 @@ export class UserService {
         errors: ['User not found!'],
       };
     }
-    console.log('user', user);
 
     return {
       result: user,

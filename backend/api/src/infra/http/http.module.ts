@@ -8,17 +8,9 @@ import { DatabaseModule } from '../database/database.module';
 import { WeatherSnapshotInsightsController } from './controllers/insights.controller';
 import { UserController } from './controllers/user.controller';
 import { WeatherSnapshotController } from './controllers/weatherSnapshot.controller';
-import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    ConvertDataToXlsxModule,
-    CryptographModule,
-    CacheModule.register({
-      ttl: 1000 * 30,
-    }),
-  ],
+  imports: [DatabaseModule, ConvertDataToXlsxModule, CryptographModule],
   controllers: [
     WeatherSnapshotController,
     UserController,

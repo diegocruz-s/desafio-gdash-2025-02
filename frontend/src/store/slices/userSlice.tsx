@@ -1,5 +1,3 @@
-import type { IReturnErrorFromAPI } from "@/types/ReturnErrorAPI";
-import type { ICreatedUser, User } from "@/types/User";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
   createUserService,
@@ -7,6 +5,8 @@ import {
   readUserByIdService,
   updateUserService,
 } from "../service/user";
+import type { IReturnErrorFromAPI } from "@/types/ReturnErrorAPI";
+import type { ICreatedUser, User } from "@/types/User";
 
 export interface IInitialStates {
   errors: string[] | null;
@@ -30,7 +30,6 @@ export const createUser = createAsyncThunk(
     if (!datas) return;
 
     const res: User = await createUserService(datas);
-    console.log("res: ", res);
     if ("error" in res) return thunkAPI.rejectWithValue(res);
 
     return res;
@@ -45,7 +44,6 @@ export const readUserById = createAsyncThunk(
     if (!userId) return thunkAPI.rejectWithValue("ID not provided");
 
     const res: User = await readUserByIdService(userId);
-    console.log("res: ", res);
     if ("error" in res) return thunkAPI.rejectWithValue(res);
 
     return res;
@@ -63,7 +61,6 @@ export const updateUser = createAsyncThunk(
     if (!userId) return thunkAPI.rejectWithValue("ID not provided");
 
     const res: User = await updateUserService(userId, datas);
-    console.log("res: ", res);
     if ("error" in res) return thunkAPI.rejectWithValue(res);
 
     return res;
@@ -78,7 +75,6 @@ export const deleteUser = createAsyncThunk(
     if (!userId) return thunkAPI.rejectWithValue("ID not provided");
 
     const res = await deleteUserService(userId);
-    console.log("res: ", res);
     if (res?.error) return thunkAPI.rejectWithValue(res);
 
     return res;
@@ -86,7 +82,7 @@ export const deleteUser = createAsyncThunk(
 );
 
 export const userSlice = createSlice({
-  name: "user",
+  name: 'user',
   initialState: initialStates,
   reducers: {
     resetStates(states) {
@@ -98,7 +94,6 @@ export const userSlice = createSlice({
   extraReducers(builder) {
     builder
       .addCase(createUser.rejected, (state, { payload }) => {
-        console.log("payload: ", payload);
         const payloadError = payload as IReturnErrorFromAPI;
 
         state.errors = payloadError.message;
@@ -111,7 +106,6 @@ export const userSlice = createSlice({
         state.loading = true;
       })
       .addCase(createUser.fulfilled, (state, { payload }) => {
-        console.log("payload: ", payload);
         const payloadDatas = payload as User;
 
         state.errors = null;
@@ -121,7 +115,6 @@ export const userSlice = createSlice({
       })
 
       .addCase(readUserById.rejected, (state, { payload }) => {
-        console.log("payload: ", payload);
         const payloadError = payload as IReturnErrorFromAPI;
 
         state.errors = payloadError.message;
@@ -134,7 +127,6 @@ export const userSlice = createSlice({
         state.loading = true;
       })
       .addCase(readUserById.fulfilled, (state, { payload }) => {
-        console.log("payload: ", payload);
         const payloadDatas = payload as User;
 
         state.errors = null;
@@ -143,7 +135,6 @@ export const userSlice = createSlice({
       })
 
       .addCase(updateUser.rejected, (state, { payload }) => {
-        console.log("payload: ", payload);
         const payloadError = payload as IReturnErrorFromAPI;
 
         state.errors = payloadError.message;
@@ -156,7 +147,6 @@ export const userSlice = createSlice({
         state.loading = true;
       })
       .addCase(updateUser.fulfilled, (state, { payload }) => {
-        console.log("payload: ", payload);
         const payloadDatas = payload as User;
 
         state.errors = null;
@@ -166,7 +156,6 @@ export const userSlice = createSlice({
       })
 
       .addCase(deleteUser.rejected, (state, { payload }) => {
-        console.log("payloadError: ", payload);
         const payloadError = payload as IReturnErrorFromAPI;
 
         state.errors = payloadError.message;
@@ -179,7 +168,6 @@ export const userSlice = createSlice({
         state.success = null;
       })
       .addCase(deleteUser.fulfilled, (state, { payload }) => {
-        console.log("payload: ", payload);
         const payloadDatas = payload as unknown as string;
 
         state.errors = null;

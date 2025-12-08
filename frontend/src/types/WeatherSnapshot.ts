@@ -7,4 +7,5 @@ export interface WeatherSnapshot {
   windSpeed: number;
   city: string;
   source: string;
+  conditional?: string;
 }

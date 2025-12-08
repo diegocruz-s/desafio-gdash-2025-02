@@ -1,14 +1,8 @@
 import type { ICreatedUser, User } from "@/types/User";
 import { api } from "@/utils/api";
 
-// function delay(ms: number) {
-//   return new Promise(resolve => setTimeout(resolve, ms));
-// }
-
 export const createUserService = async (datas: ICreatedUser) => {
   try {
-    // await delay(3000);
-
     const res = await api
       .post("/user", datas)
       .then((response) => {

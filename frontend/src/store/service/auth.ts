@@ -1,14 +1,8 @@
 import { api } from "@/utils/api";
 import type { IAuth } from "../slices/authSlice";
 
-// function delay(ms: number) {
-//   return new Promise(resolve => setTimeout(resolve, ms));
-// }
-
 export const loginService = async (datas: IAuth) => {
   try {
-    // await delay(3000);
-
     const res = await api.post('/signin', datas)
       .then(response => {
         return response.data

@@ -1,17 +1,18 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Navbar } from "./components/navbar/navbar";
-import Dashboard from "./pages/dashboard";
+import { Dashboard } from "./pages/dashboard";
 import { Login } from "./pages/login";
 import { useAuth } from "./utils/checkAuth";
-import PerfilPage from "./pages/profile";
-import Records from "./pages/records";
-import Insights from "./pages/insights";
+import { PerfilPage } from "./pages/profile";
+import { Records } from "./pages/records";
+import { Insights } from "./pages/insights";
+import { Loading } from "./components/loading/loading";
 
 export function App() {
   const { auth, loading: loadingCheckAuth } = useAuth();
 
   if (loadingCheckAuth) {
-    return <p style={{ color: "#fff" }}>Carregando...</p>;
+    return <Loading />;
   }
 
   return (

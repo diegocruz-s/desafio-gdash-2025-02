@@ -13,7 +13,7 @@ export function Navbar() {
 
   const onHandleLogout = async () => {
     await dispatch(logout());
-    navigate("/");
+    navigate("/signin");
   };
 
   const links = [

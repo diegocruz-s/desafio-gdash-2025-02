@@ -69,7 +69,7 @@ export class UserController {
 
     if (errors) {
       if (errors[0].includes('not found')) throw new NotFoundException(errors);
-      throw new BadRequestException();
+      throw new BadRequestException(errors);
     }
 
     return {
@@ -92,7 +92,6 @@ export class UserController {
       throw new BadRequestException(errors);
     }
 
-    console.log('result: ', result);
     return {
       message: result,
     };

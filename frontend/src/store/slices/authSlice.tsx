@@ -38,7 +38,6 @@ export const login = createAsyncThunk(
 
     const res: IDatasStorage = await loginService(datas);
     if ('error' in res) return thunkAPI.rejectWithValue(res);
-    console.log('res: ', res);
 
     api.defaults.headers.authorization = `Bearer ${res.accessToken}`;
     return res;
@@ -47,7 +46,7 @@ export const login = createAsyncThunk(
 
 export const logout = createAsyncThunk(
   'user/logout',
-  async (_, thunkAPI) => {
+  async () => {
       await logoutService()
   }
 )
@@ -85,7 +84,7 @@ export const authSlice = createSlice({
         localStorage.setItem('datasStorage', JSON.stringify(payloadDatas));
       })
 
-      .addCase(logout.fulfilled, (state, { payload }) => {
+      .addCase(logout.fulfilled, (state) => {
         state.errors = null
         state.loading = false
         state.datasStorage = null

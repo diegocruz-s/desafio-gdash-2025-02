@@ -1,3 +1,4 @@
 httpx
 pika
 python-dotenv
+pytz

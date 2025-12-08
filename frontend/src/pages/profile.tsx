@@ -10,7 +10,7 @@ import { type AppDispatch, useAppSelector } from "@/store/store";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
-export default function PerfilPage() {
+export function PerfilPage() {
   const dispatch = useDispatch<AppDispatch>();
 
   const { datasStorage } = useAppSelector((s) => s.auth);

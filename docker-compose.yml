@@ -29,8 +29,8 @@ services:
     container_name: rabbitmq
     restart: always
     ports:
-      - 5672:5672
-      - 15672:15672
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -39,54 +39,65 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 5s
-      timeout: 3s
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 15s
+      timeout: 10s
       retries: 10
       start_period: 60s
 
-  # worker:
-  #   build:
-  #     context: ./worker
-  #     dockerfile: Dockerfile
-  #   container_name: worker
-  #   env_file:
-  #     - ./worker/.env
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #     api:
-  #       condition: service_started
-  #   networks:
-  #     - app-network
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: worker
+    restart: always
+    env_file:
+      - ./worker/.env
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - app-network
 
-  # collector:
-  #   build:
-  #     context: ./collector
-  #     dockerfile: Dockerfile
-  #   container_name: collector
-  #   env_file:
-  #     - ./collector/.env
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - app-network
+  collector:
+    build:
+      context: ./collector
+      dockerfile: Dockerfile
+    container_name: collector
+    restart: always
+    env_file:
+      - ./collector/.env
+    networks:
+      - app-network
 
-  # api:
-  #   build:
-  #     context: ./backend/api
-  #     dockerfile: Dockerfile
-  #   container_name: api
-  #   ports:
-  #     - "3000:3000"
-  #   env_file:
-  #     - ./backend/api/.env
-  #   depends_on:
-  #     - mongo
-  #     - rabbitmq
-  #   networks:
-  #     - app-network
+  api:
+    build:
+      context: ./backend/api
+      dockerfile: Dockerfile
+    container_name: api
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/api/.env
+    depends_on:
+      - mongo
+      - rabbitmq
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    env_file:
+      - ./frontend/.env
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    networks:
+      - app-network
 
 networks:
   app-network:

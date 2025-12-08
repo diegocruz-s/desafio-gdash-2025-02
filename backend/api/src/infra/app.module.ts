@@ -10,10 +10,12 @@ import { CacheModule } from '@nestjs/cache-manager';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MongooseModule.forRoot(process.env.MONGO_URI),
     CacheModule.register({
       ttl: 1000 * 30,
+      isGlobal: true,
     }),
+
+    MongooseModule.forRoot(process.env.MONGO_URI),
     AuthModule,
     HttpModule,
   ],

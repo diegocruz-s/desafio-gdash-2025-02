@@ -9,6 +9,7 @@ import { IWeatherSnapshotRepository } from 'src/domain/weather/repositories/Weat
 import { IUserRepository } from 'src/domain/user/repository/UsersRepository';
 import { UserRepository } from './mongo/repositories/UserRepository';
 import { UserMongo, UserSchema } from './mongo/schemas/user.schema';
+import { SeedService } from './mongo/seeder/seeder.service';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UserMongo, UserSchema } from './mongo/schemas/user.schema';
       provide: IUserRepository,
       useClass: UserRepository,
     },
+    SeedService,
   ],
   exports: [IWeatherSnapshotRepository, IUserRepository],
 })

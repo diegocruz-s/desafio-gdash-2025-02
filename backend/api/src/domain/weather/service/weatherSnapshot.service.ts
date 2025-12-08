@@ -45,7 +45,9 @@ export class WeatherSnapshotService {
     };
   }
 
-  async getLatestSnapshot(): Promise<IServiceResponse<WeatherSnapshot>> {
+  async getLatestSnapshot(): Promise<
+    IServiceResponse<{ weatherSnapshot: WeatherSnapshot; conditional: string }>
+  > {
     const weatherSnapshot = await this.weatherSnapshotRepository.findLatest();
 
     if (!weatherSnapshot) {
@@ -55,7 +57,13 @@ export class WeatherSnapshotService {
     }
 
     return {
-      result: weatherSnapshot,
+      result: {
+        weatherSnapshot: weatherSnapshot,
+        conditional: this.generateConditional(
+          weatherSnapshot.temperature,
+          weatherSnapshot.humidity,
+        ),
+      },
     };
   }
 
@@ -108,5 +116,21 @@ export class WeatherSnapshotService {
     const dbStream = this.weatherSnapshotRepository.streamAll();
     const streamXlsx = this.convertDataToXlsx.convert(dbStream);
     return streamXlsx;
+  }
+
+  private generateConditional(temperature: number, humidity: number): string {
+    if (temperature >= 30 && humidity <= 60) {
+      return 'Ensolarado';
+    } else if (temperature >= 25 && temperature < 30 && humidity <= 80) {
+      return 'Parcialmente nublado';
+    } else if (temperature < 20 && humidity > 80) {
+      return 'Chuvoso';
+    } else if (temperature < 10) {
+      return 'Frio';
+    } else if (humidity > 80) {
+      return 'Quente e úmido';
+    } else {
+      return 'Nublado';
+    }
   }
 }

@@ -27,6 +27,9 @@ export class WeatherMongoRepository implements IWeatherSnapshotRepository {
     const skipAmount = (params.page - 1) * limit;
     const weatherSnapshots = await this.weatherSnapshotModel
       .find({})
+      .sort({
+        collectedAt: -1,
+      })
       .skip(skipAmount)
       .limit(limit)
       .exec();

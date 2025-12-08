@@ -6,9 +6,11 @@ import {
   Post,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { WeatherSnapshotService } from 'src/domain/weather/service/weatherSnapshot.service';
+import { JwtAuthGuard } from 'src/infra/auth/auth.guard';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../pipes/zodValidationPipe';
 import { WeatherSnapshotPresenter } from '../presenters/weatherSnapshot.presenter';
@@ -60,13 +62,14 @@ export class WeatherSnapshotController {
     const { errors, result } =
       await this.weatherSnapshotService.create(parsedBody);
 
-    if (errors) throw new BadRequestException();
+    if (errors) throw new BadRequestException(errors);
 
     return {
       weatherSnapshot: WeatherSnapshotPresenter.toHTTP(result),
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('/logs')
   async fetchWeatherSnapshots(
     @Query('page', queryValidationPipe) page: PageQueryParamSchema,
@@ -74,7 +77,7 @@ export class WeatherSnapshotController {
     const { errors, result } =
       await this.weatherSnapshotService.getAllSnapshots({ page });
 
-    if (errors) throw new BadRequestException();
+    if (errors) throw new BadRequestException(errors);
 
     return {
       weatherSnapshots: result.map((wtSp) =>
@@ -83,18 +86,24 @@ export class WeatherSnapshotController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('/latest')
   async getLatestSnapshot() {
     const { errors, result } =
       await this.weatherSnapshotService.getLatestSnapshot();
 
-    if (errors) throw new BadRequestException();
+    if (errors) throw new BadRequestException(errors);
+    const latestSnapshot = {
+      ...WeatherSnapshotPresenter.toHTTP(result.weatherSnapshot),
+      conditional: result.conditional,
+    };
 
     return {
-      weatherSnapshot: WeatherSnapshotPresenter.toHTTP(result),
+      weatherSnapshot: latestSnapshot,
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('/export.csv')
   generateCSVDatas(@Res() res: Response) {
     const result = this.weatherSnapshotService.exportAsCSVStream();
@@ -103,9 +112,17 @@ export class WeatherSnapshotController {
       'Content-Type': 'text/csv',
       'Content-Disposition': 'attachment; filename="weather.csv"',
     });
-    result.pipe(res);
+    result
+      .pipe(res)
+      .on('finish', () => {
+        console.log('Download concluído');
+      })
+      .on('error', (err) => {
+        console.error('Erro ao enviar o arquivo:', err);
+      });
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('/export.xlsx')
   generateXLSXDatas(@Res() res: Response) {
     const result = this.weatherSnapshotService.exportAsXlsxStream();
@@ -116,6 +133,13 @@ export class WeatherSnapshotController {
     );
     res.setHeader('Content-Disposition', 'attachment; filename="weather.xlsx"');
 
-    result.pipe(res);
+    result
+      .pipe(res)
+      .on('finish', () => {
+        console.log('Download concluído');
+      })
+      .on('error', (err) => {
+        console.error('Erro ao enviar o arquivo:', err);
+      });
   }
 }
